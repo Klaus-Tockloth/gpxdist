@@ -1,0 +1,6 @@
+*.gpx
+test.sh
+results.csv
+gpxdist
+gpxinfo
+build/
