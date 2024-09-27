@@ -6,13 +6,14 @@ Description:
 - Shortest, longest distance between a given location and the GPX waypoints.
 
 Releases:
-- 1.0.0 - 2018/10/26 : initial release
+- v1.0.0 - 2018/10/26 : initial release
+- v1.1.0 - 2024/09/27 : gpxgo lib v1.4, go v1.23.1, Haversine func from gpxgo lib
 
 Author:
 - Klaus Tockloth
 
 Copyright and license:
-- Copyright (c) 2018 Klaus Tockloth
+- Copyright (c) 2018-2024 Klaus Tockloth
 - MIT license
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
@@ -50,7 +51,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -62,25 +62,17 @@ import (
 // general program info
 var (
 	progName    = os.Args[0]
-	progVersion = "1.0.0"
-	progDate    = "2018/10/26"
+	progVersion = "v1.1.0"
+	progDate    = "2024/09/27"
 	progPurpose = "GPX (GPS Exchange Format) Distance Calculator (distances in meters)"
 	progInfo    = "Shortest, longest distance between a given point and the GPX points."
 )
 
 /*
-init initializes this program
-*/
-func init() {
-
-	// initialize logger
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-}
-
-/*
-main starts this program
+main starts this program.
 */
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
 	gpxfile := flag.String("gpxfile", "", "GPX file to parse")
 	lat := flag.String("lat", "", "latitude (decimal degrees) of given point")
@@ -103,9 +95,9 @@ func main() {
 	}
 
 	filename := *gpxfile
-	gpxBytes, err := ioutil.ReadFile(filename)
+	gpxBytes, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatalf("error <%v> at ioutil.ReadFile(); filename = <%v>", err, filename)
+		log.Fatalf("error <%v> at os.ReadFile(); filename = <%v>", err, filename)
 	}
 
 	gpxFile, err := gpx.ParseBytes(gpxBytes)
@@ -120,7 +112,7 @@ func main() {
 	for _, track := range gpxFile.Tracks {
 		for _, segment := range track.Segments {
 			for _, point := range segment.Points {
-				tmpDistance := int(Distance(latitude, longitude, point.Latitude, point.Longitude))
+				tmpDistance := int(math.Round(gpx.HaversineDistance(latitude, longitude, point.Latitude, point.Longitude)))
 				if tmpDistance > longestDistance {
 					longestDistance = tmpDistance
 				}
@@ -133,15 +125,12 @@ func main() {
 
 	// print results (csv format)
 	fmt.Printf("\"%s\",%s,%s,%d,%d\n", *gpxfile, *lat, *lon, shortestDistance, longestDistance)
-
-	os.Exit(0)
 }
 
 /*
-printUsage prints the usage of this program
+printUsage prints the usage of this program.
 */
 func printUsage() {
-
 	fmt.Printf("\nProgram:\n")
 	fmt.Printf("  Name    : %s\n", progName)
 	fmt.Printf("  Release : %s - %s\n", progVersion, progDate)
@@ -165,34 +154,4 @@ func printUsage() {
 
 	fmt.Printf("\n")
 	os.Exit(1)
-}
-
-/*
-Distance returns the distance (in meters) between two points of a given longitude and latitude relatively
-accurately (using a spherical approximation of the Earth) through the Haversin Distance Formula for great
-arc distance on a sphere with accuracy for small distances.
-*/
-func Distance(lat1, lon1, lat2, lon2 float64) float64 {
-
-	// convert to radians
-	var la1, lo1, la2, lo2, r float64
-	la1 = lat1 * math.Pi / 180
-	lo1 = lon1 * math.Pi / 180
-	la2 = lat2 * math.Pi / 180
-	lo2 = lon2 * math.Pi / 180
-
-	r = 6378100 // earth radius in meters
-
-	// calculate
-	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
-
-	return 2 * r * math.Asin(math.Sqrt(h))
-}
-
-/*
-hsin implements the haversin(θ) function
-*/
-func hsin(theta float64) float64 {
-
-	return math.Pow(math.Sin(theta/2), 2)
 }

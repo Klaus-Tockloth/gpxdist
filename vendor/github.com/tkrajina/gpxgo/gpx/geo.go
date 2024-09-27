@@ -97,7 +97,7 @@ func Length3D(locs []Point) float64 {
 func CalcMaxSpeed(speedsDistances []SpeedsAndDistances) float64 {
 	lenArrs := len(speedsDistances)
 
-	if len(speedsDistances) < 20 {
+	if len(speedsDistances) < 3 {
 		//log.Println("Segment too small to compute speed, size: ", lenArrs)
 		return 0.0
 	}
@@ -129,6 +129,7 @@ func CalcMaxSpeed(speedsDistances []SpeedsAndDistances) float64 {
 	}
 
 	speedsSorted := sort.Float64Slice(speeds)
+	sort.Sort(speedsSorted)
 
 	if len(speedsSorted) == 0 {
 		return 0
@@ -228,6 +229,29 @@ func Distance2D(lat1, lon1, lat2, lon2 float64, haversine bool) float64 {
 //Distance3D calculates the distance of 2 geo coordinates including elevation distance
 func Distance3D(lat1, lon1 float64, ele1 NullableFloat64, lat2, lon2 float64, ele2 NullableFloat64, haversine bool) float64 {
 	return distance(lat1, lon1, ele1, lat2, lon2, ele2, true, haversine)
+}
+
+func AngleFromNorth(loc1, loc2 Point, radians bool) float64 {
+	coef := math.Cos(ToRad(loc1.Latitude))
+
+	b := (loc2.Longitude - loc1.Longitude) * coef
+	a := loc2.Latitude - loc1.Latitude
+
+	angle := math.Atan(b / a)
+
+	if a < 0 {
+		angle += math.Pi
+	}
+
+	if angle < 0 {
+		angle += 2 * math.Pi
+	}
+
+	if radians {
+		return angle
+	}
+
+	return 180 * angle / math.Pi
 }
 
 //ElevationAngle calculates the elevation angle (steepness) between to points

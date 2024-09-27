@@ -113,10 +113,11 @@ gpx
 */
 
 type gpx10Gpx struct {
-	XMLName      xml.Name `xml:"gpx"`
-	XMLNs        string   `xml:"xmlns,attr,omitempty"`
-	XmlNsXsi     string   `xml:"xmlns:xsi,attr,omitempty"`
-	XmlSchemaLoc string   `xml:"xsi:schemaLocation,attr,omitempty"`
+	XMLName      xml.Name   `xml:"gpx"`
+	Attrs        []xml.Attr `xml:",any,attr"`
+	XMLNs        string     `xml:"xmlns,attr,omitempty"`
+	XmlNsXsi     string     `xml:"xmlns:xsi,attr,omitempty"`
+	XmlSchemaLoc string     `xml:"xsi:schemaLocation,attr,omitempty"`
 
 	Version   string           `xml:"version,attr"`
 	Creator   string           `xml:"creator,attr"`
@@ -178,8 +179,8 @@ type gpx10GpxLink struct {
  * Common struct fields for all points
  */
 type gpx10GpxPoint struct {
-	Lat float64 `xml:"lat,attr"`
-	Lon float64 `xml:"lon,attr"`
+	Lat formattedFloat `xml:"lat,attr"`
+	Lon formattedFloat `xml:"lon,attr"`
 	// Position info
 	Ele         NullableFloat64 `xml:"ele,omitempty"`
 	Timestamp   string          `xml:"time,omitempty"`
